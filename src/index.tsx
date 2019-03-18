@@ -13,6 +13,10 @@ function reducer(state, action) {
       return { ...state, word: action.word };
     case "ADD_WORD":
       return { ...state, words: [...state.words, action.word] };
+    case "REMOVE_WORD":
+      const removed = state.words.filter(word => word !== action.word);
+      log(`removed`, removed);
+      return { ...state, words: [...removed] };
     case "SET_TERM":
       return { ...state, term: action.term };
     case "SET_ISEXACT": {
@@ -25,40 +29,64 @@ function reducer(state, action) {
 
 function App() {
   // prettier-ignore
-  const words = [
+  const initialWords = [
     "abcd", "abce", "ABC", "THE", "their",
     "there", "hel", "hell", "hello", "help",
     "helping", "helps"
   ];
   const isCaseSensitive = false;
-  const trie = useTrie(words, isCaseSensitive);
-  const [state, dispatch] = React.useReducer(reducer, { words, trie });
+  const trie = useTrie(initialWords, isCaseSensitive);
+  const [state, dispatch] = React.useReducer(reducer, {
+    words: initialWords,
+    trie
+  });
 
   const checkIfTermExists = e =>
     dispatch({ type: "SET_TERM", term: e.target.value });
-  const getAvailableWords = React.useCallback(
-    () => words.map(word => <li key={word}>{word}</li>),
-    [words]
+
+  const removeWord = React.useCallback(
+    (word: string) => {
+      log(`removing "${word}"`);
+      trie.remove(word);
+      dispatch({ type: "REMOVE_WORD", word });
+    },
+    [trie]
+  );
+
+  const AvailableWords = React.useMemo(
+    () =>
+      state.words.map(word => {
+        return (
+          <li key={word}>
+            <button key={word} onClick={() => removeWord(word)}>
+              ❌
+            </button>{" "}
+            {word}
+          </li>
+        );
+      }),
+    [state.words]
   );
 
   const setWord = React.useCallback(
-    e => {
-      const word = e.target.value;
-      console.log(`setting word="${word}"`);
-      dispatch({ type: "SET_WORD", word });
-    },
+    e => dispatch({ type: "SET_WORD", word: e.target.value }),
     [state.word]
   );
 
   const addWord = React.useCallback(
     e => {
       e.preventDefault();
-
-      console.log(`adding word="${state.word}"`);
       state.trie.add(state.word);
       dispatch({ type: "ADD_WORD", word: state.word });
     },
     [state.word]
+  );
+
+  const getMatches = React.useCallback(
+    () => {
+      return trie.search(state.term).map(word => <li key={word}>{word}</li>);
+    },
+    [trie]
   );
 
   return (
@@ -77,8 +105,8 @@ function App() {
         </form>
       </section>
       <section>
-        <h2>Following words are available for search</h2>
-        <ul>{getAvailableWords()}</ul>
+        <h2>Available for search</h2>
+        <ul>{AvailableWords}</ul>
       </section>
       <section>
         <article>
@@ -107,11 +135,7 @@ function App() {
         </article>
         <article>
           <h2>Possible Matches</h2>
-          <ul>
-            {trie.search(state.term).map(word => (
-              <li key={word}>{word}</li>
-            ))}
-          </ul>
+          <ul>{getMatches()}</ul>
         </article>{" "}
       </section>
     </React.Fragment>
