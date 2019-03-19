@@ -9,10 +9,21 @@ import "./styles.css";
 
 const log = console.log;
 
+const Container = styled.section`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
 const ContentContainer = styled.section`
   display: grid;
+  grid-gap: 55px;
   grid: 1fr / 2fr 3fr;
   margin-top: 2rem;
+`;
+
+const AvailableWordsContainer = styled.section`
+  justify-content: center;
 `;
 
 function reducer(state, action) {
@@ -20,6 +31,8 @@ function reducer(state, action) {
     case "SET_WORD":
       return { ...state, word: action.word };
     case "ADD_WORD":
+      if (state.words.includes(action.word)) return state;
+
       // Mutating the trie returns a new instance
       state.trie.add(action.word);
       return { ...state, words: [...state.words, action.word] };
@@ -105,8 +118,21 @@ function App() {
     [trie]
   );
 
+  const getExistStatus = React.useCallback(
+    () => {
+      const { trie, term, isExact } = state;
+      return (
+        <pre>
+          The term "{term}"
+          {trie.has(term, isExact) ? " exists" : " does not exist!"}
+        </pre>
+      );
+    },
+    [state.term, state.isExact]
+  );
+
   return (
-    <React.Fragment>
+    <Container>
       <header>
         <h1>Case Insensitive search</h1>
       </header>
@@ -121,20 +147,18 @@ function App() {
         </form>
       </section>
       <ContentContainer>
-        <section>
+        <AvailableWordsContainer>
           <h2>Available for search</h2>
           <ol>{AvailableWords}</ol>
-        </section>
+        </AvailableWordsContainer>
         <section>
           <article>
-            <div>
-              <input
-                placeholder="Search"
-                type="text"
-                value={state.term}
-                onChange={checkIfTermExists}
-              />
-            </div>
+            <input
+              placeholder="Search"
+              type="text"
+              value={state.term}
+              onChange={checkIfTermExists}
+            />{" "}
             <label>
               Exact match?
               <input
@@ -146,17 +170,14 @@ function App() {
               />
             </label>
           </article>
-          <article>
-            The term "{state.term}"{" "}
-            {trie.has(state.term, state.isExact) ? "exists" : "does not exist!"}
-          </article>
+          <article>{getExistStatus()}</article>
           <article>
             <h2>Possible Matches</h2>
             <ol>{getMatches()}</ol>
           </article>{" "}
         </section>
       </ContentContainer>
-    </React.Fragment>
+    </Container>
   );
 }
 
