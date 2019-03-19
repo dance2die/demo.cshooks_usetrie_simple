@@ -2,10 +2,18 @@ import * as React from "react";
 import { render } from "react-dom";
 
 import useTrie, { Trie } from "@cshooks/usetrie";
+import styled, { createGlobalStyle } from "styled-components";
+// import { Reset } from "styled-reset";
 
 import "./styles.css";
 
 const log = console.log;
+
+const ContentContainer = styled.section`
+  display: grid;
+  grid: 1fr / 2fr 3fr;
+  margin-top: 2rem;
+`;
 
 function reducer(state, action) {
   switch (action.type) {
@@ -105,50 +113,62 @@ function App() {
       <section>
         <form onSubmit={addWord}>
           <input
-            placeholder="Enter new word"
+            placeholder="Add a new word"
             onChange={setWord}
             value={state.word}
           />
           <button type="submit">Add</button>
         </form>
       </section>
-      <section>
-        <h2>Available for search</h2>
-        <ul>{AvailableWords}</ul>
-      </section>
-      <section>
-        <article>
-          <div>
-            <input
-              placeholder="Enter Search Term"
-              type="text"
-              value={state.term}
-              onChange={checkIfTermExists}
-            />
-          </div>
-          <label>
-            Exact match?
-            <input
-              type="checkbox"
-              checked={state.isExact}
-              onChange={e =>
-                dispatch({ type: "SET_ISEXACT", isExact: e.target.checked })
-              }
-            />
-          </label>
-        </article>
-        <article>
-          The term "{state.term}"{" "}
-          {trie.has(state.term, state.isExact) ? "exists" : "does not exist!"}
-        </article>
-        <article>
-          <h2>Possible Matches</h2>
-          <ul>{getMatches()}</ul>
-        </article>{" "}
-      </section>
+      <ContentContainer>
+        <section>
+          <h2>Available for search</h2>
+          <ol>{AvailableWords}</ol>
+        </section>
+        <section>
+          <article>
+            <div>
+              <input
+                placeholder="Search"
+                type="text"
+                value={state.term}
+                onChange={checkIfTermExists}
+              />
+            </div>
+            <label>
+              Exact match?
+              <input
+                type="checkbox"
+                checked={state.isExact}
+                onChange={e =>
+                  dispatch({ type: "SET_ISEXACT", isExact: e.target.checked })
+                }
+              />
+            </label>
+          </article>
+          <article>
+            The term "{state.term}"{" "}
+            {trie.has(state.term, state.isExact) ? "exists" : "does not exist!"}
+          </article>
+          <article>
+            <h2>Possible Matches</h2>
+            <ol>{getMatches()}</ol>
+          </article>{" "}
+        </section>
+      </ContentContainer>
     </React.Fragment>
   );
 }
 
+const GlobalStyle = createGlobalStyle({
+  boxSizing: "border-box"
+});
+
 const rootElement = document.getElementById("root");
-render(<App />, rootElement);
+render(
+  <React.Fragment>
+    <GlobalStyle />
+    <App />
+  </React.Fragment>,
+  rootElement
+);
