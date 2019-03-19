@@ -12,12 +12,13 @@ function reducer(state, action) {
     case "SET_WORD":
       return { ...state, word: action.word };
     case "ADD_WORD":
+      // Mutating the trie returns a new instance
       state.trie.add(action.word);
       return { ...state, words: [...state.words, action.word] };
     case "REMOVE_WORD":
       const removed = state.words.filter(word => word !== action.word);
+      // Mutating the trie returns a new instance
       state.trie.remove(action.word);
-
       return { ...state, words: [...removed] };
     case "SET_TERM":
       return { ...state, term: action.term };
